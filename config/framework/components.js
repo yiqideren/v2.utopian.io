@@ -11,6 +11,7 @@ module.exports = [
   'QLayoutDrawer',
   'QChip',
   'QBtnDropdown',
+  'QBtnGroup',
   'QList',
   'QSelect',
   'QItem',
