@@ -11,6 +11,16 @@ routes.push([
       tags: ['api', 'blockchains', 'steem'],
       validate: Validate.linkSteemAccount
     }
+  },
+  {
+    method: 'GET',
+    path: '/v1/blockchains/steem/{username}/available',
+    handler: (req, h, next) => Handlers.isSteemUsernameAvailable(req, h, next),
+    options: {
+      auth: false,
+      tags: ['api', 'blockchains', 'steem'],
+      validate: Validate.isSteemUsernameAvailable
+    }
   }
 ])
 module.exports = routes

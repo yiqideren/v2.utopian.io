@@ -1,6 +1,6 @@
 const Boom = require('boom')
 const User = require('../../users/user.model')
-const { getSteemConnectTokens } = require('../../../utils/blockchains/steem')
+const { getSteemConnectTokens, getSteemAccounts } = require('../../../utils/blockchains/steem')
 const { encrypt } = require('../../../utils/security')
 
 const linkSteemAccount = async (req, h) => {
@@ -35,6 +35,16 @@ const linkSteemAccount = async (req, h) => {
   throw Boom.badData('document-does-not-exist')
 }
 
+const isSteemUsernameAvailable = async (req, h) => {
+  const accounts = await getSteemAccounts([req.params.username])
+  if (accounts.length > 0) {
+    return h.response({ data: { available: false } })
+  }
+
+  return h.response({ data: { available: true } })
+}
+
 module.exports = {
-  linkSteemAccount
+  linkSteemAccount,
+  isSteemUsernameAvailable
 }
