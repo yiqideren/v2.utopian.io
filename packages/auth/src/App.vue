@@ -15,7 +15,7 @@ export default {
 
     if (this.$route.path === '/') {
       if (this.$route.query.redirectUrl) {
-        if (typeof window !== 'undefined') window.location = this.$route.query.redirectUrl
+        if (typeof window !== 'undefined') window.location = this.$route.query.redirectUrl || process.env.UTOPIAN_DOMAIN
       } else {
         this.$router.push('login')
       }

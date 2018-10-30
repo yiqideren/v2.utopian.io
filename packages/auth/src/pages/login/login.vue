@@ -10,8 +10,12 @@ export default {
   name: 'u-page-login',
   methods: {
     startGithubLogin () {
-      const state = btoa(`githublogin::${this.$route.query.redirectUrl}`)
+      const state = btoa(`githublogin::${this.$route.query.redirectUrl || process.env.UTOPIAN_DOMAIN}`)
       window.location = `https://github.com/login/oauth/authorize?scope=read:user,repo&client_id=${process.env.GITHUB_CLIENT_ID}&state=${state}`
+    },
+    startGoogleLogin () {
+    },
+    startLinkedinLogin () {
     }
   }
 }
