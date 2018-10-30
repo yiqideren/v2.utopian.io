@@ -4,5 +4,7 @@ q-layout.u-page-login
       .column.items-center.login-from
         img.q-mb-xl(src="~assets/img/logo-black.svg")
         q-btn.q-mb-sm(@click="startGithubLogin", icon="mdi-github-circle", color="white", text-color="black", label="$t('login.button.login')")
+        q-btn.q-mb-sm(@click="startLinkedinLogin", icon="mdi-linkedin-box", color="blue", text-color="white", label="$t('login.button.login')")
+        q-btn.q-mb-sm(@click="startGoogleLogin", icon="mdi-google", color="blue", text-color="white", label="$t('login.button.login')")
     .side-img.col-md-8
       img(src="~assets/img/background.jpg")
