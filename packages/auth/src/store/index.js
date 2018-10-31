@@ -5,6 +5,7 @@ import Vuex from 'vuex'
 // import store modules.
 import api from './api'
 import auth from './auth'
+import blockchainSteem from './blockchains/steem'
 import users from './users'
 import utils from './utils'
 
@@ -12,6 +13,7 @@ import utils from './utils'
 const modules = {
   api,
   auth,
+  blockchainSteem,
   users,
   utils
 }

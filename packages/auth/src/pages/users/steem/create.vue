@@ -49,14 +49,8 @@ export default {
 
   // component methods.
   methods: {
-    ...mapActions([
-      'startLoading',
-      'stopLoading',
-      'showDialog'
-    ]),
-    ...mapActions('users', [
-      'isUsernameAvailable',
-      'saveUser'
+    ...mapActions('blockchainSteem', [
+      'isSteemUsernameAvailable'
     ]),
     validateUsername () {
       this.user.usernameAvailable = 'checking'
@@ -67,7 +61,7 @@ export default {
       this.$v.user.$touch()
       if (this.user.username.length > 2 && usernameValidator.minLength &&
         usernameValidator.maxLength && usernameValidator.regex) {
-        this.user.usernameAvailable = await this.isUsernameAvailable(this.user.username)
+        this.user.usernameAvailable = await this.isSteemUsernameAvailable(this.user.username)
       }
       if (this.user.usernameAvailable === 'checking') {
         this.user.usernameAvailable = ''
