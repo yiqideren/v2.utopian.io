@@ -12,7 +12,14 @@ const isSteemUsernameAvailable = {
   }
 }
 
+const createSteemAccount = {
+  params: {
+    username: Joi.string().trim().lowercase().required().min(3).max(32).regex(/^[A-Za-z0-9]+(?:[._-][A-Za-z0-9]+)*$/)
+  }
+}
+
 module.exports = {
-  linkSteemAccount,
-  isSteemUsernameAvailable
+  createSteemAccount,
+  isSteemUsernameAvailable,
+  linkSteemAccount
 }

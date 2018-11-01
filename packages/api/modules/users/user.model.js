@@ -41,6 +41,10 @@ const users = new Schema({
     },
     data: { type: Object }
   }],
+  hasCreatedSteemAccout: {
+    type: Boolean,
+    default: false
+  },
   createdAt: { type: Date, default: Date.now() },
   updatedAt: { type: Date },
   deletedAt: { type: Date }

@@ -1,6 +1,6 @@
 const Boom = require('boom')
 const User = require('../../users/user.model')
-const { getSteemConnectTokens, getSteemAccounts } = require('../../../utils/blockchains/steem')
+const { getSteemConnectTokens, getSteemAccounts, steem } = require('../../../utils/blockchains/steem')
 const { encrypt } = require('../../../utils/security')
 
 const linkSteemAccount = async (req, h) => {
@@ -44,7 +44,62 @@ const isSteemUsernameAvailable = async (req, h) => {
   return h.response({ data: { available: true } })
 }
 
+const createSteemAccount = async (req, h) => {
+  const { username, ownerAuth, activeAuth, postingAuth, memoAuth } = req.body
+
+  const user = await User.findOne({ username: req.auth.credentials.username })
+
+  if (user) {
+    if (user.hasCreatedSteemAccount) throw Boom.badData('user-already-created-steem-account')
+
+    // CHANGE PREFIX FOR TESTNET
+    if (process.env.REG_TESTNET !== 'false') {
+      ownerAuth.key_auths[0][0] = ownerAuth.key_auths[0][0].replace('STM', 'STX')
+      activeAuth.key_auths[0][0] = activeAuth.key_auths[0][0].replace('STM', 'STX')
+      postingAuth.key_auths[0][0] = postingAuth.key_auths[0][0].replace('STM', 'STX')
+      memoAuth.key_auths[0][0] = memoAuth.key_auths[0][0].replace('STM', 'STX')
+    }
+
+    const creator = process.env.REG_TESTNET !== 'false' ? process.env.ACCOUNT_CREATOR_TEST : process.env.ACCOUNT_CREATOR
+
+    const creatorPassword = process.env.REG_TESTNET !== 'false' ? process.env.ACCOUNT_CREATOR_PASSWORD_TEST : process.env.ACCOUNT_CREATOR_ACTIVE_KEY
+    const creatorKey = process.env.REG_TESTNET !== 'false'
+      ? steem.PrivateKey.fromLogin(String(creator), String(creatorPassword), 'active')
+      : steem.PrivateKey.from(String(creatorPassword))
+
+    // the create discounted account operation
+    const createOp = [
+      'create_claimed_account',
+      {
+        creator,
+        new_account_name: username,
+        owner: ownerAuth,
+        active: activeAuth,
+        posting: postingAuth,
+        memo_key: memoAuth.key_auths[0][0],
+        json_metadata: '',
+        extensions: []
+      }
+    ]
+
+    const steemResult = await steem.broadcast.sendOperations([createOp], creatorKey)
+
+    console.log(steemResult)
+    return h.response({
+      data: steemResult
+    })
+    // user.steem_account = account_name
+    // user.hasCreatedSteemAccount = true
+    // await user.save()
+
+    // let new_user = await create_new_user(user)
+    // if(new_user) { res.status(200).send({ message: "Account has been created.", user: user}) }
+    // else { res.status(500).json({ message: `We couldn't create your account. Please contact us on discord!`}) }
+  }
+}
+
 module.exports = {
-  linkSteemAccount,
-  isSteemUsernameAvailable
+  createSteemAccount,
+  isSteemUsernameAvailable,
+  linkSteemAccount
 }
