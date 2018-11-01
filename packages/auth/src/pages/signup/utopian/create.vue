@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken'
 import { Cookies, debounce, Notify, Loading } from 'quasar'
 
 export default {
-  name: 'u-page-users-create',
+  name: 'u-page-signup-utopian-create',
   preFetch ({ redirect, ssrContext }) {
     const cookies = process.env.SERVER ? Cookies.parseSSR(ssrContext) : Cookies
     const accessToken = jwt.decode(cookies.get('access_token'))
@@ -96,9 +96,9 @@ export default {
         await this.saveUser({ username: this.user.username })
         Loading.hide()
 
-        this.$route.push('users.steemsignup')
+        this.$route.push('signup/steem')
 
-        if (typeof window !== 'undefined') window.location = this.$route.query.redirectUrl || process.env.UTOPIAN_DOMAIN
+        // if (typeof window !== 'undefined') window.location = this.$route.query.redirectUrl || process.env.UTOPIAN_DOMAIN
       } catch (err) {
         Loading.hide()
         Notify.create({
@@ -112,6 +112,34 @@ export default {
 }
 </script>
 
-<style lang="stylus" src="./create.styl"></style>
+<template lang="pug">
+  div.create-user-form
+    p.q-title Please create a unique username to be used in Utopian.io
+    q-field.full-width.q-mb-md(
+      :error="$v.user.username.$error && user.usernameAvailable !== 'checking'",
+      :error-label="getErrorLabel()"
+    )
+      q-input(
+        v-model.trim="user.username",
+        placeholder="ada.lovelace",
+        :before="[{ icon: 'mdi-account' }]",
+        prefix="@"
+        maxlength="32"
+        @input="validateUsername()"
+        :loading="user.usernameAvailable === 'checking'"
+        :color="user.usernameAvailable === true ? 'green' : 'primary'"
+      )
+    q-btn.full-width(color="primary", label="Create", @click="submit", :disabled="user.usernameAvailable !== true")
+</template>
 
-<template lang="pug" src="./create.pug"></template>
+<style lang="stylus">
+.create-user-form {
+  .q-if-addon-left {
+    margin-top 5px
+  }
+
+  .q-field {
+    height 75px
+  }
+}
+</style>
