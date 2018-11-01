@@ -1,8 +1,12 @@
 <script>
-import { required, minLength, maxLength, helpers } from 'vuelidate/lib/validators'
+import { required, minLength } from 'vuelidate/lib/validators'
 import { mapGetters, mapActions } from 'vuex'
 import jwt from 'jsonwebtoken'
-import { Cookies, debounce, Notify, Loading } from 'quasar'
+import * as randomBytes from 'randombytes'
+// import * as dsteem from 'dsteem'
+import { Cookies, Notify, Loading } from 'quasar'
+
+// const dsteemClient = new dsteem.Client()
 
 export default {
   name: 'u-page-signup-steem-password',
@@ -27,8 +31,7 @@ export default {
 
       // user internal data.
       user: {
-        username: '',
-        usernameAvailable: ''
+        password: ''
       }
     }
   },
@@ -37,12 +40,9 @@ export default {
   validations: {
     ...mapGetters('api', ['getTokens']),
     user: {
-      username: {
+      password: {
         required,
-        minLength: minLength(3),
-        maxLength: maxLength(32),
-        usernameAvailable: (value, vm) => vm.usernameAvailable,
-        regex: helpers.regex('alpha', /^[A-Za-z0-9]+(?:[._-][A-Za-z0-9]+)*$/)
+        minLength: minLength(12)
       }
     }
   },
@@ -56,28 +56,14 @@ export default {
       this.user.usernameAvailable = 'checking'
       this.checkUsername()
     },
-    checkUsername: debounce(async function () {
-      const usernameValidator = this.$v.user.username
-      this.$v.user.$touch()
-      if (this.user.username.length > 2 && usernameValidator.minLength &&
-        usernameValidator.maxLength && usernameValidator.regex) {
-        this.user.usernameAvailable = await this.isSteemUsernameAvailable(this.user.username)
-      }
-      if (this.user.usernameAvailable === 'checking') {
-        this.user.usernameAvailable = ''
-      }
-    }, 1000),
+    generatePassword () {
+      this.user.password = randomBytes(32).toString('hex')
+    },
     getErrorLabel () {
-      const usernameValidator = this.$v.user.username
+      const usernameValidator = this.$v.user.password
 
       if (!usernameValidator.minLength) {
-        return 'The username should be at least 3 characters long.'
-      } else if (!usernameValidator.maxLength) {
-        return 'The username should have the maximum of 32 characters.'
-      } else if (!usernameValidator.regex) {
-        return 'Please use alphanumeric characters. Dot, underscore and dash are allowed as separators.'
-      } else if (!usernameValidator.usernameAvailable) {
-        return 'Sorry. This username is not available.'
+        return 'The username should be at least 12 characters long.'
       }
 
       return ''
@@ -102,6 +88,10 @@ export default {
         })
       }
     }
+  },
+
+  mounted () {
+    this.generatePassword()
   }
 }
 </script>
@@ -111,18 +101,14 @@ div.create-user-form
   p.q-title This is your Steem password key.
   p.q-subtitle Make sure to save your password at a safe and secure location as IT CANNOT BE RESTORED OR RECOVERED.
   q-field.full-width.q-mb-md(
-    :error="$v.user.username.$error && user.usernameAvailable !== 'checking'",
+    :error="$v.user.password.$error",
     :error-label="getErrorLabel()"
   )
     q-input(
-      v-model.trim="user.username",
+      v-model.trim="user.password",
       placeholder="ada.lovelace",
-      :before="[{ icon: 'mdi-account' }]",
-      prefix="@"
-      maxlength="32"
-      @input="validateUsername()"
-      :loading="user.usernameAvailable === 'checking'"
-      :color="user.usernameAvailable === true ? 'green' : 'primary'"
+      :before="[{ icon: 'mdi-key' }]",
+      @input="$v.user.$touch()"
     )
   q-btn.full-width(color="primary", label="Create", @click="submit", :disabled="user.usernameAvailable !== true")
 </template>
