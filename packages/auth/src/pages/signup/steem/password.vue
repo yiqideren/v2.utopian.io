@@ -59,6 +59,22 @@ export default {
     generatePassword () {
       this.user.password = randomBytes(32).toString('hex')
     },
+    downloadPassword () {
+      const element = document.createElement('a')
+      const info = 'Please make sure that you save this password and deconste the file afterwards.' +
+        ' We advise writing it down on several pieces of papers and storing it in a secure place' +
+        ' and/or using a password-safe application.'
+      const password = `\r\n\r\nPassword: ${this.user.password}`
+      element.setAttribute(
+        'href',
+        'data:text/plaincharset=utf-8,' + encodeURIComponent(info + password)
+      )
+      element.setAttribute('download', Date.now())
+      element.style.display = 'none'
+      document.body.appendChild(element)
+      element.click()
+      document.body.removeChild(element)
+    },
     getErrorLabel () {
       const usernameValidator = this.$v.user.password
 
@@ -108,9 +124,15 @@ div.create-user-form
       v-model.trim="user.password",
       placeholder="ada.lovelace",
       :before="[{ icon: 'mdi-key' }]",
-      @input="$v.user.$touch()"
+      :after="[{ icon: 'mdi-download', handler() { downloadPassword() } }]",
+      @input="$v.user.$touch()",
+
     )
-  q-btn.full-width(color="primary", label="Create", @click="submit", :disabled="user.usernameAvailable !== true")
+  q-btn.full-width(
+    color="primary",
+    label="Create",
+    @click="submit"
+  )
 </template>
 
 <style lang="stylus">
