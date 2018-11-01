@@ -2,13 +2,15 @@
 import UtopianSignup from 'src/pages/signup/utopian/create'
 import SteemSignup from 'src/pages/signup/steem'
 import SteemSignupUsername from 'src/pages/signup/steem/username'
+import SteemSignupPassword from 'src/pages/signup/steem/password'
 
 export default {
   name: 'u-page-signup',
   components: {
     UtopianSignup,
     SteemSignup,
-    SteemSignupUsername
+    SteemSignupUsername,
+    SteemSignupPassword
   },
   mounted () {
     this.currentStep = this.$route.params.step
@@ -50,11 +52,8 @@ q-layout.u-page-signup.column.items-center.justify-center
 
     q-step(name="steem/password" title="Steem" subtitle="Create password")
       q-stepper-navigation
-        q-btn(
-          color="primary"
-          @click="currentStep = 'first'"
-          label="Go Back"
-        )
+        steem-signup-password
+
     q-step(name="finish" title="Finish" subtitle="Go to app")
       q-stepper-navigation
         q-btn(
