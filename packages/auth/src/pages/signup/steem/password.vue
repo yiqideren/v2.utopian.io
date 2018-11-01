@@ -92,9 +92,7 @@ export default {
         await this.saveUser({ username: this.user.username })
         Loading.hide()
 
-        this.$route.push('users.steemsignup')
-
-        if (typeof window !== 'undefined') window.location = this.$route.query.redirectUrl || process.env.UTOPIAN_DOMAIN
+        this.$router.push('/signup/finish')
       } catch (err) {
         Loading.hide()
         Notify.create({
