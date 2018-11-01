@@ -6,6 +6,7 @@ export default {
   name: 'u-app',
   async preFetch ({ currentRoute, store, redirect, ssrContext }) {
     await authPlugin({ currentRoute, store, redirect, ssrContext })
+    store.commit('utils/setRedirectUrl', currentRoute.query.redirectUrl)
   },
   methods: {
     ...mapActions('utils', ['transferToLocalStorage'])
