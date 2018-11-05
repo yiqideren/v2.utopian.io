@@ -31,11 +31,18 @@ export default {
 
 <template lang="pug" src="">
 .create-user-form
-  p.q-title You can connect a Steem account to receive SP rewards.
-  q-btn.q-ma-sm.full-width(color="primary", label="Connect my Steem account", @click="goToConnect", :disabled="true")
-  q-btn.q-ma-sm.full-width(color="primary", label="I don't have a Steem account", @click="goToCreate")
-  p
-    a(href="localhost:8080") Skip this step
+  p.q-title You're almost there! Just a few more steps and you'll be ready to use Utopian.io
+  p.q-subtitle You can connect a Steem account to receive SP rewards
+  //- q-list
+  //-   q-collapsible(label="First" disable)
+  //-   q-collapsible(icon="perm_identity", label="Second")
+  //-     div Content
+  //-   q-collapsible(icon="shopping_cart", label="Third")
+  //-     div Content
+  q-btn(color="primary", label="Connect", @click="goToConnect", :disabled="true")
+  q-btn.q-ml-sm(flat, color="primary", label="I don't have a Steem account", @click="goToCreate")
+  .row.justify-end.q-mt-sm
+    q-btn(outline, color="primary", label="Skip", @click="goToCreate", icon-right="mdi-arrow-right")
 </template>
 
 <style lang="stylus">
@@ -49,6 +56,13 @@ export default {
 
   .q-field {
     height 75px
+  }
+
+  .u-next-btn {
+    width 100%
+    .q-btn {
+      width 100px
+    }
   }
 }
 </style>

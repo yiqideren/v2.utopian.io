@@ -113,8 +113,9 @@ export default {
 </script>
 
 <template lang="pug">
-  div.create-user-form
-    p.q-title Please create a unique username to be used in Utopian.io
+  div.create-user-form.row
+    p.q-title You're almost there! Just a few more steps and you'll be ready to use Utopian.io
+    p.q-subtitle Please create a unique username
     q-field.full-width.q-mb-md(
       :error="$v.user.username.$error && user.usernameAvailable !== 'checking'",
       :error-label="getErrorLabel()"
@@ -129,14 +130,23 @@ export default {
         :loading="user.usernameAvailable === 'checking'"
         :color="user.usernameAvailable === true ? 'green' : 'primary'"
       )
-    q-btn.full-width(color="primary", label="Create", @click="submit", :disabled="user.usernameAvailable !== true")
+    .row.justify-end.u-next-btn
+      q-btn(color="primary", icon-right="mdi-arrow-right", label="Next", @click="submit", :disabled="user.usernameAvailable !== true")
 </template>
 
 <style lang="stylus">
 .create-user-form {
+  .u-next-btn {
+    width 100%
+    .q-btn {
+      width 100px
+    }
+  }
   .q-if-addon-left {
     margin-top 5px
   }
+
+  text-align left !important
 
   .q-field {
     height 75px
