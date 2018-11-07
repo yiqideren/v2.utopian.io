@@ -17,7 +17,7 @@ export default {
   // component methods.
   methods: {
     goToCreate () {
-      this.$router.push('/signup/steem/username')
+      this.$router.push('/signup/steem/create')
     },
     goToConnect () {
       this.$router.push('signup/steem/username')

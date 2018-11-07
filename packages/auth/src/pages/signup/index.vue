@@ -1,17 +1,15 @@
 <script>
-import UtopianSignup from 'src/pages/signup/utopian/create'
-import SteemSignup from 'src/pages/signup/steem'
-import SteemSignupUsername from 'src/pages/signup/steem/username'
-import SteemSignupPassword from 'src/pages/signup/steem/password'
+import Utopian from 'src/pages/signup/utopian'
+import SteemConnect from 'src/pages/signup/steem/connect'
+import SteemCreate from 'src/pages/signup/steem/create'
 import Finish from 'src/pages/signup/finish'
 
 export default {
   name: 'u-page-signup',
   components: {
-    UtopianSignup,
-    SteemSignup,
-    SteemSignupUsername,
-    SteemSignupPassword,
+    Utopian,
+    SteemConnect,
+    SteemCreate,
     Finish
   },
   mounted () {
@@ -44,15 +42,15 @@ q-layout.u-page-signup.column.items-center
     )
       q-step(name="utopian" title="Utopian" subtitle="Create username")
         q-stepper-navigation
-          utopian-signup
+          utopian
 
-      q-step(name="steem" title="Steem" subtitle="Connect account")
+      q-step(name="steem/connect" title="Steem" subtitle="Connect account")
         q-stepper-navigation
-          steem-signup
+          steem-connect
 
-      q-step(name="steem/username" title="Steem" subtitle="Create username")
+      q-step(name="steem/create" title="Steem" subtitle="Create username")
         q-stepper-navigation
-          steem-signup-username
+          steem-create
 
       q-step(name="finish" title="Finish" subtitle="Go to app")
         q-stepper-navigation
