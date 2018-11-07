@@ -185,7 +185,7 @@ div.create-user-form
             :loading="user.usernameAvailable === 'checking'"
             :color="user.usernameAvailable === true ? 'green' : 'primary'"
           )
-        .row.justify-end.u-next-btn
+        .row.justify-end
           q-btn(color="primary", icon-right="mdi-arrow-down", label="Next", @click="currentStep = 'password'", :disabled="user.usernameAvailable !== true")
 
     q-step(name="password" title="Password" icon="mdi-key")

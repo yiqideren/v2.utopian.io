@@ -49,7 +49,9 @@ module.exports = function (ctx) {
     framework: {
       components: [
         'QBtn',
-        'QCollapsible',
+        'QCard',
+        'QCardMain',
+        'QCardSeparator',
         'QField',
         'QIcon',
         'QInput',
