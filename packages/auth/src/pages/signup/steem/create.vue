@@ -2,8 +2,6 @@
 import { required, minLength, maxLength, helpers } from 'vuelidate/lib/validators'
 import { mapGetters, mapActions } from 'vuex'
 import jwt from 'jsonwebtoken'
-import * as randomBytes from 'randombytes'
-import * as dsteem from 'dsteem'
 import { Cookies, debounce, Notify, Loading } from 'quasar'
 
 export default {
@@ -61,14 +59,14 @@ export default {
   methods: {
     ...mapActions('blockchainSteem', [
       'isSteemUsernameAvailable',
-      'createSteemAccount'
+      'createSteemAccount',
+      'generatePassword',
+      'generatePrivateKeysFromPassword',
+      'generateAuthFromKeys'
     ]),
     validateUsername () {
       this.user.usernameAvailable = 'checking'
       this.checkUsername()
-    },
-    generatePassword () {
-      this.user.password = randomBytes(32).toString('hex')
     },
     downloadPassword () {
       const element = document.createElement('a')
@@ -112,37 +110,20 @@ export default {
 
       return ''
     },
-    generateAuthFromKeys () {
-      for (let key in this.user.keys) {
-        this.user.keys[key.split('Key')[0] + 'Auth'] = {
-          weight_threshold: 1,
-          account_auths: [],
-          key_auths: [
-            [this.user.keys[key].createPublic(), 1]
-          ]
-        }
-      }
-    },
-    generatePrivateKeysFromPassword () {
-      this.user.keys.ownerKey = dsteem.PrivateKey.fromLogin(this.user.username, this.user.password, 'owner')
-      this.user.keys.activeKey = dsteem.PrivateKey.fromLogin(this.user.username, this.user.password, 'active')
-      this.user.keys.postingKey = dsteem.PrivateKey.fromLogin(this.user.username, this.user.password, 'posting')
-      this.user.keys.memoKey = dsteem.PrivateKey.fromLogin(this.user.username, this.user.password, 'memo')
-    },
     async submit () {
       this.$v.user.$touch()
 
       Loading.show({ message: this.$t('users.create.loading') })
       try {
-        this.generatePrivateKeysFromPassword()
-        this.generateAuthFromKeys()
+        const keys = this.generatePrivateKeysFromPassword(this.user.username, this.user.password)
+        const auth = this.generateAuthFromKeys(keys)
 
         const res = await this.createSteemAccount({
           username: this.user.username,
-          ownerAuth: this.user.keys.ownerAuth,
-          activeAuth: this.user.keys.activeAuth,
-          postingAuth: this.user.keys.postingAuth,
-          memoAuth: this.user.keys.memoAuth
+          ownerAuth: auth.ownerAuth,
+          activeAuth: auth.activeAuth,
+          postingAuth: auth.postingAuth,
+          memoAuth: auth.memoAuth
         })
 
         if (res.error) throw new Error({ message: res.error })

@@ -41,7 +41,7 @@ const createSteemAccountOperation = ({ username, ownerAuth, activeAuth, postingA
   } else {
     creator = process.env.ACCOUNT_CREATOR
     creatorPassword = process.env.ACCOUNT_CREATOR_ACTIVE_KEY
-    creatorKey = dsteem.PrivateKey.from(String(creatorPassword)) 
+    creatorKey = dsteem.PrivateKey.from(String(creatorPassword))
   }
 
   // the create discounted account operation

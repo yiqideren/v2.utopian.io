@@ -1,4 +1,6 @@
 import API from 'src/plugins/api'
+import * as dsteem from 'dsteem'
+import * as randomBytes from 'randombytes'
 
 export const isSteemUsernameAvailable = async (context, username) => {
   const payload = await API.call({
@@ -19,4 +21,31 @@ export const createSteemAccount = async (context, data) => {
   })
 
   return payload
+}
+
+export const generatePassword = () => randomBytes(32).toString('hex')
+
+export const generateAuthFromKeys = (keys) => {
+  const auth = {}
+  for (let key in keys) {
+    auth[key.split('Key')[0] + 'Auth'] = {
+      weight_threshold: 1,
+      account_auths: [],
+      key_auths: [
+        [keys[key].createPublic(), 1]
+      ]
+    }
+  }
+
+  return auth
+}
+
+export const generatePrivateKeysFromPassword = (username, password) => {
+  const keys = {}
+  keys.ownerKey = dsteem.PrivateKey.fromLogin(username, password, 'owner')
+  keys.activeKey = dsteem.PrivateKey.fromLogin(username, password, 'active')
+  keys.postingKey = dsteem.PrivateKey.fromLogin(username, password, 'posting')
+  keys.memoKey = dsteem.PrivateKey.fromLogin(username, password, 'memo')
+
+  return keys
 }
