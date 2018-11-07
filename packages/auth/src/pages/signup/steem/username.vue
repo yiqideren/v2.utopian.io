@@ -2,6 +2,7 @@
 import { required, minLength, maxLength, helpers } from 'vuelidate/lib/validators'
 import { mapGetters, mapActions } from 'vuex'
 import jwt from 'jsonwebtoken'
+import * as randomBytes from 'randombytes'
 import { Cookies, debounce, Notify, Loading } from 'quasar'
 
 export default {
@@ -24,11 +25,12 @@ export default {
         'account',
         'username'
       ]),
-
+      currentStep: 'utopian',
       // user internal data.
       user: {
         username: '',
-        usernameAvailable: ''
+        usernameAvailable: '',
+        password: ''
       }
     }
   },
@@ -43,6 +45,10 @@ export default {
         maxLength: maxLength(32),
         usernameAvailable: (value, vm) => vm.usernameAvailable,
         regex: helpers.regex('alpha', /^[A-Za-z0-9]+(?:[._-][A-Za-z0-9]+)*$/)
+      },
+      password: {
+        required,
+        minLength: minLength(12)
       }
     }
   },
@@ -55,6 +61,25 @@ export default {
     validateUsername () {
       this.user.usernameAvailable = 'checking'
       this.checkUsername()
+    },
+    generatePassword () {
+      this.user.password = randomBytes(32).toString('hex')
+    },
+    downloadPassword () {
+      const element = document.createElement('a')
+      const info = 'Please make sure that you save this password and deconste the file afterwards.' +
+        ' We advise writing it down on several pieces of papers and storing it in a secure place' +
+        ' and/or using a password-safe application.'
+      const password = `\r\n\r\nPassword: ${this.user.password}`
+      element.setAttribute(
+        'href',
+        'data:text/plaincharset=utf-8,' + encodeURIComponent(info + password)
+      )
+      element.setAttribute('download', Date.now())
+      element.style.display = 'none'
+      document.body.appendChild(element)
+      element.click()
+      document.body.removeChild(element)
     },
     checkUsername: debounce(async function () {
       const usernameValidator = this.$v.user.username
@@ -100,33 +125,73 @@ export default {
         })
       }
     }
+  },
+
+  mounted () {
+    this.generatePassword()
   }
 }
 </script>
 
 <template lang="pug">
 div.create-user-form
-  p.q-title Please create a unique username to be used in Steem.
-  p.q-subtitle We suggest you to use the same username you created for Utopian.
-  q-field.full-width.q-mb-md(
-    :error="$v.user.username.$error && user.usernameAvailable !== 'checking'",
-    :error-label="getErrorLabel()"
+  p.q-title You're almost there! Just a few more steps and you'll be ready to use Utopian.io
+  p.q-subtitle Create a Steem account
+  q-stepper(
+    v-model="currentStep",
+    active-icon="mdi-pencil",
+    done-icon="mdi-check",
+    error-icon="mdi-alert-circle",
+    alternative-labels,
+    vertical
   )
-    q-input(
-      v-model.trim="user.username",
-      placeholder="ada.lovelace",
-      :before="[{ icon: 'mdi-account' }]",
-      prefix="@"
-      maxlength="32"
-      @input="validateUsername()"
-      :loading="user.usernameAvailable === 'checking'"
-      :color="user.usernameAvailable === true ? 'green' : 'primary'"
-    )
-  q-btn.full-width(color="primary", label="Create", @click="submit", :disabled="user.usernameAvailable !== true")
+    q-step(name="username" title="Username" icon="mdi-account")
+      q-stepper-navigation
+        p.q-subtitle Create a unique username for Steem. We recommend you to use the same username you created for Utopian, if possible.
+        q-field.full-width.q-mb-md(
+          :error="$v.user.username.$error && user.usernameAvailable !== 'checking'",
+          :error-label="getErrorLabel()"
+        )
+          q-input(
+            v-model.trim="user.username",
+            placeholder="ada.lovelace",
+            :before="[{ icon: 'mdi-account' }]",
+            prefix="@"
+            maxlength="32"
+            @input="validateUsername()"
+            :loading="user.usernameAvailable === 'checking'"
+            :color="user.usernameAvailable === true ? 'green' : 'primary'"
+          )
+        .row.justify-end.u-next-btn
+          q-btn(color="primary", icon-right="mdi-arrow-down", label="Next", @click="currentStep = 'password'", :disabled="user.usernameAvailable !== true")
+
+    q-step(name="password" title="Password" icon="mdi-key")
+      q-stepper-navigation
+        p.q-subtitle We have generated a secure password for you. Make sure to save it at a safe and secure location as
+          b  IT CANNOT BE RESTORED OR RECOVERED.
+        q-field.full-width.q-mb-md(
+          :error="$v.user.password.$error",
+          :error-label="getErrorLabel()"
+        )
+          q-input(
+            v-model.trim="user.password",
+            :before="[{ icon: 'mdi-key' }]",
+            :after="[{ icon: 'mdi-download', handler() { downloadPassword() } }]",
+            @input="$v.user.$touch()",
+
+          )
+        q-btn.full-width(
+          color="primary",
+          label="Create",
+          @click="submit"
+        )
 </template>
 
 <style lang="stylus">
 .create-user-form {
+  .q-stepper {
+    background-color white
+  }
   .q-if-addon-left {
     margin-top 5px
   }

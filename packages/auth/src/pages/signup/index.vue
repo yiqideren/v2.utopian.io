@@ -34,11 +34,12 @@ export default {
 q-layout.u-page-signup.column.items-center
   img.utopian-logo(src="~assets/img/logo-black.svg")
   .centered-container
-    q-stepper(
+    q-stepper.main-stepper(
       v-model="currentStep",
       active-icon="mdi-pencil",
       done-icon="mdi-check",
       error-icon="mdi-alert-circle",
+      alternative-labels,
       no-header-navigation
     )
       q-step(name="utopian" title="Utopian" subtitle="Create username")
@@ -49,13 +50,9 @@ q-layout.u-page-signup.column.items-center
         q-stepper-navigation
           steem-signup
 
-      //- q-step(name="steem/username" title="Steem" subtitle="Create username")
-      //-   q-stepper-navigation
-      //-     steem-signup-username
-
-      //- q-step(name="steem/password" title="Steem" subtitle="Create password")
-      //-   q-stepper-navigation
-      //-     steem-signup-password
+      q-step(name="steem/username" title="Steem" subtitle="Create username")
+        q-stepper-navigation
+          steem-signup-username
 
       q-step(name="finish" title="Finish" subtitle="Go to app")
         q-stepper-navigation
@@ -71,8 +68,8 @@ q-layout.u-page-signup.column.items-center
     margin-bottom 50px
   }
   .centered-container {
-    width 550px
-    .q-stepper {
+    width 600px
+    .q-stepper.main-stepper {
       border none !important
       box-shadow none
       .q-stepper-header {
@@ -85,6 +82,7 @@ q-layout.u-page-signup.column.items-center
     }
 
     .create-user-form {
+      width 100%
       text-align center
       .utopian-logo {
         height 60px

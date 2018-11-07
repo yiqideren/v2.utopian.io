@@ -135,7 +135,6 @@ div.create-user-form
 
 <style lang="stylus">
 .create-user-form {
-  max-width 485px
   .q-if-addon-left {
     margin-top 5px
   }
