@@ -19,6 +19,7 @@ export const saveUser = async (context, data) => {
     data
   })
 
+  context.commit('setUsername', data.username)
   Cookies.set('refresh_token', payload.tokens.refresh_token, {
     path: '/',
     expires: 365

@@ -20,11 +20,9 @@ export default {
   // component data.
   data () {
     return {
-      // map user store getters.
-      ...mapGetters('auth', [
-        'account',
-        'username'
-      ]),
+      ...mapGetters('users', {
+        getUtopianUsername: 'username'
+      }),
       currentStep: 'utopian',
       // user internal data.
       user: {
@@ -37,7 +35,6 @@ export default {
 
   // component validations.
   validations: {
-    ...mapGetters('api', ['getTokens']),
     user: {
       username: {
         required,
@@ -129,6 +126,13 @@ export default {
 
   mounted () {
     this.generatePassword()
+    this.user.username = this.getUtopianUsername()
+    if (this.user.username !== '') {
+      this.validateUsername()
+      setTimeout(() => {
+        this.$refs.username.$el.focus()
+      }, 1000)
+    }
   }
 }
 </script>
@@ -154,6 +158,7 @@ div.create-user-form
         )
           q-input(
             v-model.trim="user.username",
+            ref="username"
             placeholder="ada.lovelace",
             :before="[{ icon: 'mdi-account' }]",
             prefix="@"
