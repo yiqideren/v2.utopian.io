@@ -137,7 +137,7 @@ export default {
         this.generatePrivateKeysFromPassword()
         this.generateAuthFromKeys()
 
-        await this.createSteemAccount({
+        const res = await this.createSteemAccount({
           username: this.user.username,
           ownerAuth: this.user.keys.ownerAuth,
           activeAuth: this.user.keys.activeAuth,
@@ -145,9 +145,11 @@ export default {
           memoAuth: this.user.keys.memoAuth
         })
 
+        if (res.error) throw new Error({ message: res.error })
+
         Loading.hide()
 
-        // this.$router.push('signup/finish')
+        this.$router.push('/signup/finish')
       } catch (err) {
         Loading.hide()
         Notify.create({

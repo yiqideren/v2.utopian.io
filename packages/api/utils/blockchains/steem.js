@@ -24,8 +24,46 @@ const getSteemConnectTokens = async (code) => {
 
 const getSteemAccounts = (accounts) => steemClient.database.getAccounts(accounts)
 
+const isRunningOnTestnet = () => (process.env.TESTNET === true || process.env.TESTNET === 'true')
+
+const createSteemAccountOperation = ({ username, ownerAuth, activeAuth, postingAuth, memoAuth }) => {
+  let creator, creatorKey, creatorPassword
+
+  if (isRunningOnTestnet()) {
+    ownerAuth.key_auths[0][0] = ownerAuth.key_auths[0][0].replace('STM', 'STX')
+    activeAuth.key_auths[0][0] = activeAuth.key_auths[0][0].replace('STM', 'STX')
+    postingAuth.key_auths[0][0] = postingAuth.key_auths[0][0].replace('STM', 'STX')
+    memoAuth.key_auths[0][0] = memoAuth.key_auths[0][0].replace('STM', 'STX')
+
+    creator = process.env.ACCOUNT_CREATOR_TESTNET
+    creatorPassword = process.env.ACCOUNT_CREATOR_PASSWORD_TESTNET
+    creatorKey = dsteem.PrivateKey.fromLogin(String(creator), String(creatorPassword), 'active')
+  } else {
+    creator = process.env.ACCOUNT_CREATOR
+    creatorPassword = process.env.ACCOUNT_CREATOR_ACTIVE_KEY
+    creatorKey = dsteem.PrivateKey.from(String(creatorPassword)) 
+  }
+
+  // the create discounted account operation
+  const createOp = [
+    'create_claimed_account',
+    {
+      creator,
+      new_account_name: username,
+      owner: ownerAuth,
+      active: activeAuth,
+      posting: postingAuth,
+      memo_key: memoAuth.key_auths[0][0],
+      json_metadata: '',
+      extensions: []
+    }
+  ]
+
+  return steemClient.broadcast.sendOperations([createOp], creatorKey)
+}
+
 module.exports = {
-  dsteem,
+  createSteemAccountOperation,
   steemClient,
   getSteemAccounts,
   getSteemConnectTokens

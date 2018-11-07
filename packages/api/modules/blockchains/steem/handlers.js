@@ -1,6 +1,6 @@
 const Boom = require('boom')
 const User = require('../../users/user.model')
-const { getSteemConnectTokens, getSteemAccounts, steemClient, dsteem } = require('../../../utils/blockchains/steem')
+const { getSteemConnectTokens, getSteemAccounts, createSteemAccountOperation } = require('../../../utils/blockchains/steem')
 const { encrypt } = require('../../../utils/security')
 
 const linkSteemAccount = async (req, h) => {
@@ -45,56 +45,23 @@ const isSteemUsernameAvailable = async (req, h) => {
 }
 
 const createSteemAccount = async (req, h) => {
-  const { username, ownerAuth, activeAuth, postingAuth, memoAuth } = req.payload
-
   const user = await User.findOne({ username: req.auth.credentials.username })
-
   if (user) {
     if (user.hasCreatedSteemAccount) throw Boom.badData('user-already-created-steem-account')
+    try {
+      const steemResult = await createSteemAccountOperation(req.payload)
 
-    // CHANGE PREFIX FOR TESTNET
-    if (process.env.TESTNET === true) {
-      ownerAuth.key_auths[0][0] = ownerAuth.key_auths[0][0].replace('STM', 'STX')
-      activeAuth.key_auths[0][0] = activeAuth.key_auths[0][0].replace('STM', 'STX')
-      postingAuth.key_auths[0][0] = postingAuth.key_auths[0][0].replace('STM', 'STX')
-      memoAuth.key_auths[0][0] = memoAuth.key_auths[0][0].replace('STM', 'STX')
+      return h.response({
+        data: steemResult
+      })
+    } catch (err) {
+      // This log is necessary to check if the operation is being called correctly even if the user can't claim accounts
+      // console.err(err)
+      throw Boom.badData('could-not-create-account')
     }
-
-    const creator = process.env.TESTNET === true ? process.env.ACCOUNT_CREATOR_TESTNET : process.env.ACCOUNT_CREATOR
-    const creatorPassword = process.env.TESTNET === true ? process.env.ACCOUNT_CREATOR_PASSWORD_TESTNET : process.env.ACCOUNT_CREATOR_ACTIVE_KEY
-    const creatorKey = process.env.TESTNET === true
-      ? dsteem.PrivateKey.fromLogin(String(creator), String(creatorPassword), 'active')
-      : dsteem.PrivateKey.from(String(creatorPassword))
-
-    // the create discounted account operation
-    const createOp = [
-      'create_claimed_account',
-      {
-        creator,
-        new_account_name: username,
-        owner: ownerAuth,
-        active: activeAuth,
-        posting: postingAuth,
-        memo_key: memoAuth.key_auths[0][0],
-        json_metadata: '',
-        extensions: []
-      }
-    ]
-
-    console.log(createOp)
-    const steemResult = await steemClient.broadcast.sendOperations([createOp], creatorKey)
-    console.log(steemResult)
-    return h.response({
-      data: steemResult
-    })
-    // user.steem_account = account_name
-    // user.hasCreatedSteemAccount = true
-    // await user.save()
-
-    // let new_user = await create_new_user(user)
-    // if(new_user) { res.status(200).send({ message: "Account has been created.", user: user}) }
-    // else { res.status(500).json({ message: `We couldn't create your account. Please contact us on discord!`}) }
   }
+
+  throw Boom.badData('document-does-not-exist')
 }
 
 module.exports = {
