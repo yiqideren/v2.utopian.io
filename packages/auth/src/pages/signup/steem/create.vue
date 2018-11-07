@@ -115,8 +115,8 @@ export default {
 
       Loading.show({ message: this.$t('users.create.loading') })
       try {
-        const keys = this.generatePrivateKeysFromPassword(this.user.username, this.user.password)
-        const auth = this.generateAuthFromKeys(keys)
+        const keys = await this.generatePrivateKeysFromPassword({ username: this.user.username, password: this.user.password })
+        const auth = await this.generateAuthFromKeys(keys)
 
         const res = await this.createSteemAccount({
           username: this.user.username,
@@ -142,8 +142,8 @@ export default {
     }
   },
 
-  mounted () {
-    this.generatePassword()
+  async mounted () {
+    this.user.password = await this.generatePassword()
     this.user.username = this.getUtopianUsername()
     if (this.user.username !== '') {
       this.validateUsername()

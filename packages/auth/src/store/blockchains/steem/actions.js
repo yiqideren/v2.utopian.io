@@ -25,7 +25,7 @@ export const createSteemAccount = async (context, data) => {
 
 export const generatePassword = () => randomBytes(32).toString('hex')
 
-export const generateAuthFromKeys = (keys) => {
+export const generateAuthFromKeys = (context, keys) => {
   const auth = {}
   for (let key in keys) {
     auth[key.split('Key')[0] + 'Auth'] = {
@@ -40,7 +40,7 @@ export const generateAuthFromKeys = (keys) => {
   return auth
 }
 
-export const generatePrivateKeysFromPassword = (username, password) => {
+export const generatePrivateKeysFromPassword = (context, { username, password }) => {
   const keys = {}
   keys.ownerKey = dsteem.PrivateKey.fromLogin(username, password, 'owner')
   keys.activeKey = dsteem.PrivateKey.fromLogin(username, password, 'active')
