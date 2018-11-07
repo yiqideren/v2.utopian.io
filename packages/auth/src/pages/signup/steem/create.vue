@@ -3,10 +3,11 @@ import { required, minLength, maxLength, helpers } from 'vuelidate/lib/validator
 import { mapGetters, mapActions } from 'vuex'
 import jwt from 'jsonwebtoken'
 import * as randomBytes from 'randombytes'
+import * as dsteem from 'dsteem'
 import { Cookies, debounce, Notify, Loading } from 'quasar'
 
 export default {
-  name: 'u-page-signup-steem-username',
+  name: 'u-page-signup-steem-create',
   preFetch ({ redirect, ssrContext }) {
     const cookies = process.env.SERVER ? Cookies.parseSSR(ssrContext) : Cookies
     const accessToken = jwt.decode(cookies.get('access_token'))
@@ -28,7 +29,13 @@ export default {
       user: {
         username: '',
         usernameAvailable: '',
-        password: ''
+        password: '',
+        keys: {
+          ownerKey: '',
+          activeKey: '',
+          postingKey: '',
+          memoKey: ''
+        }
       }
     }
   },
@@ -53,7 +60,8 @@ export default {
   // component methods.
   methods: {
     ...mapActions('blockchainSteem', [
-      'isSteemUsernameAvailable'
+      'isSteemUsernameAvailable',
+      'createSteemAccount'
     ]),
     validateUsername () {
       this.user.usernameAvailable = 'checking'
@@ -104,15 +112,42 @@ export default {
 
       return ''
     },
+    generateAuthFromKeys () {
+      for (let key in this.user.keys) {
+        this.user.keys[key.split('Key')[0] + 'Auth'] = {
+          weight_threshold: 1,
+          account_auths: [],
+          key_auths: [
+            [this.user.keys[key].createPublic(), 1]
+          ]
+        }
+      }
+    },
+    generatePrivateKeysFromPassword () {
+      this.user.keys.ownerKey = dsteem.PrivateKey.fromLogin(this.user.username, this.user.password, 'owner')
+      this.user.keys.activeKey = dsteem.PrivateKey.fromLogin(this.user.username, this.user.password, 'active')
+      this.user.keys.postingKey = dsteem.PrivateKey.fromLogin(this.user.username, this.user.password, 'posting')
+      this.user.keys.memoKey = dsteem.PrivateKey.fromLogin(this.user.username, this.user.password, 'memo')
+    },
     async submit () {
       this.$v.user.$touch()
 
       Loading.show({ message: this.$t('users.create.loading') })
       try {
-        // await this.saveUser({ username: this.user.username })
+        this.generatePrivateKeysFromPassword()
+        this.generateAuthFromKeys()
+
+        await this.createSteemAccount({
+          username: this.user.username,
+          ownerAuth: this.user.keys.ownerAuth,
+          activeAuth: this.user.keys.activeAuth,
+          postingAuth: this.user.keys.postingAuth,
+          memoAuth: this.user.keys.memoAuth
+        })
+
         Loading.hide()
 
-        this.$router.push('signup/finish')
+        // this.$router.push('signup/finish')
       } catch (err) {
         Loading.hide()
         Notify.create({

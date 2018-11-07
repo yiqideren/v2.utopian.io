@@ -9,3 +9,14 @@ export const isSteemUsernameAvailable = async (context, username) => {
 
   return payload.available
 }
+
+export const createSteemAccount = async (context, data) => {
+  const payload = await API.call({
+    context,
+    method: 'post',
+    url: `/v1/blockchains/steem/account`,
+    data
+  })
+
+  return payload
+}

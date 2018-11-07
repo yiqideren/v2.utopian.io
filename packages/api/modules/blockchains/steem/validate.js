@@ -14,7 +14,11 @@ const isSteemUsernameAvailable = {
 
 const createSteemAccount = {
   payload: {
-    username: Joi.string().trim().lowercase().required().min(3).max(32).regex(/^[A-Za-z0-9]+(?:[._-][A-Za-z0-9]+)*$/)
+    username: Joi.string().trim().lowercase().required().min(3).max(32).regex(/^[A-Za-z0-9]+(?:[._-][A-Za-z0-9]+)*$/),
+    ownerAuth: Joi.object(),
+    activeAuth: Joi.object(),
+    postingAuth: Joi.object(),
+    memoAuth: Joi.object()
   }
 }
 

@@ -1,6 +1,6 @@
 const Boom = require('boom')
 const User = require('../../users/user.model')
-const { getSteemConnectTokens, getSteemAccounts, steem } = require('../../../utils/blockchains/steem')
+const { getSteemConnectTokens, getSteemAccounts, steemClient, dsteem } = require('../../../utils/blockchains/steem')
 const { encrypt } = require('../../../utils/security')
 
 const linkSteemAccount = async (req, h) => {
@@ -45,7 +45,7 @@ const isSteemUsernameAvailable = async (req, h) => {
 }
 
 const createSteemAccount = async (req, h) => {
-  const { username, ownerAuth, activeAuth, postingAuth, memoAuth } = req.body
+  const { username, ownerAuth, activeAuth, postingAuth, memoAuth } = req.payload
 
   const user = await User.findOne({ username: req.auth.credentials.username })
 
@@ -53,19 +53,18 @@ const createSteemAccount = async (req, h) => {
     if (user.hasCreatedSteemAccount) throw Boom.badData('user-already-created-steem-account')
 
     // CHANGE PREFIX FOR TESTNET
-    if (process.env.REG_TESTNET !== 'false') {
+    if (process.env.TESTNET === true) {
       ownerAuth.key_auths[0][0] = ownerAuth.key_auths[0][0].replace('STM', 'STX')
       activeAuth.key_auths[0][0] = activeAuth.key_auths[0][0].replace('STM', 'STX')
       postingAuth.key_auths[0][0] = postingAuth.key_auths[0][0].replace('STM', 'STX')
       memoAuth.key_auths[0][0] = memoAuth.key_auths[0][0].replace('STM', 'STX')
     }
 
-    const creator = process.env.REG_TESTNET !== 'false' ? process.env.ACCOUNT_CREATOR_TEST : process.env.ACCOUNT_CREATOR
-
-    const creatorPassword = process.env.REG_TESTNET !== 'false' ? process.env.ACCOUNT_CREATOR_PASSWORD_TEST : process.env.ACCOUNT_CREATOR_ACTIVE_KEY
-    const creatorKey = process.env.REG_TESTNET !== 'false'
-      ? steem.PrivateKey.fromLogin(String(creator), String(creatorPassword), 'active')
-      : steem.PrivateKey.from(String(creatorPassword))
+    const creator = process.env.TESTNET === true ? process.env.ACCOUNT_CREATOR_TESTNET : process.env.ACCOUNT_CREATOR
+    const creatorPassword = process.env.TESTNET === true ? process.env.ACCOUNT_CREATOR_PASSWORD_TESTNET : process.env.ACCOUNT_CREATOR_ACTIVE_KEY
+    const creatorKey = process.env.TESTNET === true
+      ? dsteem.PrivateKey.fromLogin(String(creator), String(creatorPassword), 'active')
+      : dsteem.PrivateKey.from(String(creatorPassword))
 
     // the create discounted account operation
     const createOp = [
@@ -82,8 +81,8 @@ const createSteemAccount = async (req, h) => {
       }
     ]
 
-    const steemResult = await steem.broadcast.sendOperations([createOp], creatorKey)
-
+    console.log(createOp)
+    const steemResult = await steemClient.broadcast.sendOperations([createOp], creatorKey)
     console.log(steemResult)
     return h.response({
       data: steemResult

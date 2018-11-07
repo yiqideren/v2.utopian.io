@@ -1,7 +1,7 @@
 const Axios = require('axios')
-const { Client } = require('dsteem')
+const dsteem = require('dsteem')
 
-const steem = new Client(process.env.STEEM_API)
+const steemClient = new dsteem.Client(process.env.STEEM_API)
 
 const getSteemConnectTokens = async (code) => {
   const response = await Axios({
@@ -22,10 +22,11 @@ const getSteemConnectTokens = async (code) => {
   return null
 }
 
-const getSteemAccounts = (accounts) => steem.database.getAccounts(accounts)
+const getSteemAccounts = (accounts) => steemClient.database.getAccounts(accounts)
 
 module.exports = {
-  steem,
+  dsteem,
+  steemClient,
   getSteemAccounts,
   getSteemConnectTokens
 }
