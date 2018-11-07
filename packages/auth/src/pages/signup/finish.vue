@@ -1,9 +1,21 @@
 <script>
+import { Cookies } from 'quasar'
+
 export default {
   name: 'u-page-signup-finish',
+  preFetch ({ redirect, ssrContext }) {
+    const cookies = process.env.SERVER ? Cookies.parseSSR(ssrContext) : Cookies
+
+    this.redirectUrl = cookies.get('redirect_url')
+  },
+  data () {
+    return {
+      redirectUrl: process.env.UTOPIAN_DOMAIN
+    }
+  },
   methods: {
     goToApp () {
-      window.location = 'http://localhost:8080'
+      if (typeof window !== 'undefined') window.location = this.redirectUrl || process.env.UTOPIAN_DOMAIN
     }
   }
 }
@@ -24,9 +36,6 @@ export default {
 
 <style lang="stylus">
 .create-user-form {
-  .u-goback-btn {
-    width 100-x
-  }
   .q-if-addon-left {
     margin-top 5px
   }

@@ -23,6 +23,8 @@ export default async ({ currentRoute, store, redirect, ssrContext }) => {
   const stateVariables = atob(state).split('::')
   const loginState = stateVariables[0]
   const redirectUrl = stateVariables[1]
+  cookies.set('redirect_url', redirectUrl)
+
   if (loginState === 'githublogin') {
     await gitHubLogin({ currentRoute, store, redirect, ssrContext, redirectUrl })
   } else {

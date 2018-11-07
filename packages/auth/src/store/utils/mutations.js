@@ -5,7 +5,3 @@ export const pushLocalStorageValues = (state, values) => {
 export const clearLocalStorageValues = (state) => {
   state.localStorageData = []
 }
-
-export const setRedirectUrl = (state, redirectUrl) => {
-  state.redirectUrl = redirectUrl
-}
