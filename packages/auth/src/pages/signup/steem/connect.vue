@@ -9,8 +9,8 @@ export default {
     const accessToken = jwt.decode(cookies.get('access_token'))
     let scopes = accessToken && accessToken.scopes ? accessToken.scopes : []
 
-    if (!scopes.includes('createAccount')) {
-      // redirect('/')
+    if (!scopes.includes('user')) {
+      redirect('/')
     }
   },
 
@@ -23,7 +23,7 @@ export default {
       this.$router.push('signup/steem/username')
     },
     skip () {
-      if (typeof window !== 'undefined') window.location = this.$route.query.redirectUrl || process.env.UTOPIAN_DOMAIN
+      this.$router.push('/signup/finish')
     }
   }
 }
@@ -33,10 +33,11 @@ export default {
 .create-user-form
   p.q-title You're almost there! Just a few more steps and you'll be ready to use Utopian.io
   p.q-subtitle You can connect a Steem account to receive SP rewards
-  q-btn(color="primary", label="Connect", @click="goToConnect", :disabled="true")
-  q-btn.q-ml-sm(flat, color="primary", label="I don't have a Steem account", @click="goToCreate")
+  .row
+    q-btn.col-xs-12.col-md-3(color="primary", label="Connect", @click="goToConnect", :disabled="true")
+    q-btn.q-ml-sm(flat, color="primary", label="I don't have a Steem account", @click="goToCreate")
   .row.justify-end.q-mt-sm
-    q-btn.q-mt-md(outline, color="primary", label="Skip", @click="goToCreate", icon-right="mdi-arrow-right")
+    q-btn.q-mt-md(outline, color="primary", label="Skip", @click="skip", icon-right="mdi-arrow-right")
 </template>
 
 <style lang="stylus">

@@ -12,13 +12,17 @@ export default {
     SteemCreate,
     Finish
   },
-  mounted () {
-    this.currentStep = this.$route.params.step
-  },
   data () {
     return {
-      currentStep: 'utopian'
+      currentStep: 'utopian',
+      didMount: false
     }
+  },
+  mounted () {
+    this.currentStep = this.$route.params.step
+    this.$nextTick(function () {
+      this.didMount = true
+    })
   },
   watch: {
     '$route' (to, from) {
@@ -29,8 +33,10 @@ export default {
 </script>
 
 <template lang="pug">
-q-layout.u-page-signup.column.items-center
-  img.utopian-logo(src="~assets/img/logo-black.svg")
+q-layout.u-page-signup.column.items-center.no-wrap
+  .column.justify-center.items-center.logo-container
+    img.utopian-logo(src="~assets/img/logo-black.svg")
+    q-spinner.q-ma-xl(v-if="!didMount" size="7em" color="primary")
   .centered-container
     q-stepper.main-stepper(
       v-model="currentStep",
@@ -39,8 +45,9 @@ q-layout.u-page-signup.column.items-center
       error-icon="mdi-alert-circle",
       alternative-labels,
       no-header-navigation
+      v-if="didMount"
     )
-      q-step(name="utopian" title="Utopian" subtitle="Create username")
+      q-step(name="utopian" title="Utopian" subtitle="Create username" default)
         q-stepper-navigation
           utopian
 
@@ -59,14 +66,19 @@ q-layout.u-page-signup.column.items-center
 
 <style lang="stylus">
 .u-page-signup {
+  height 100%
   background-color #f7f7f7
+  .logo-container {
+    min-height 130px
+  }
   .utopian-logo {
-    margin-top 50px
-    height 60px
-    margin-bottom 50px
+    margin-top 40px
+    height 50px
+    margin-bottom 40px
   }
   .centered-container {
-    width 600px
+    background-color #f7f7f7
+    max-width 600px
     .q-stepper.main-stepper {
       border none !important
       box-shadow none

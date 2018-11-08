@@ -147,9 +147,9 @@ export default {
     this.user.username = this.getUtopianUsername()
     if (this.user.username !== '') {
       this.validateUsername()
-      setTimeout(() => {
+      this.$nextTick(() => {
         this.$refs.username.$el.focus()
-      }, 1000)
+      })
     }
   }
 }
@@ -185,7 +185,7 @@ div.create-user-form
             :loading="user.usernameAvailable === 'checking'"
             :color="user.usernameAvailable === true ? 'green' : 'primary'"
           )
-        .row.justify-end
+        .row.full-width.justify-end
           q-btn(color="primary", icon-right="mdi-arrow-down", label="Next", @click="currentStep = 'password'", :disabled="user.usernameAvailable !== true")
 
     q-step(name="password" title="Password" icon="mdi-key")
@@ -201,7 +201,6 @@ div.create-user-form
             :before="[{ icon: 'mdi-key' }]",
             :after="[{ icon: 'mdi-download', handler() { downloadPassword() } }]",
             @input="$v.user.$touch()",
-
           )
         q-btn.full-width(
           color="primary",
@@ -213,6 +212,7 @@ div.create-user-form
 <style lang="stylus">
 .create-user-form {
   .q-stepper {
+    max-width 100vw
     background-color white
   }
   .q-if-addon-left {

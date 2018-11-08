@@ -19,7 +19,13 @@ export const saveUser = async (context, data) => {
     data
   })
 
+  await context.dispatch('api/setTokens', {
+    accessToken: payload.tokens.access_token,
+    refreshToken: payload.tokens.refresh_token
+  }, { root: true })
+
   context.commit('setUsername', data.username)
+
   Cookies.set('refresh_token', payload.tokens.refresh_token, {
     path: '/',
     expires: 365

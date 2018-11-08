@@ -19,12 +19,7 @@ export default {
   // component data.
   data () {
     return {
-      // map user store getters.
-      ...mapGetters('auth', [
-        'account',
-        'username'
-      ]),
-
+      ...mapGetters('api', ['getTokens']),
       // user internal data.
       user: {
         username: '',
@@ -35,7 +30,6 @@ export default {
 
   // component validations.
   validations: {
-    ...mapGetters('api', ['getTokens']),
     user: {
       username: {
         required,
@@ -49,11 +43,6 @@ export default {
 
   // component methods.
   methods: {
-    ...mapActions([
-      'startLoading',
-      'stopLoading',
-      'showDialog'
-    ]),
     ...mapActions('users', [
       'isUsernameAvailable',
       'saveUser'
@@ -97,8 +86,6 @@ export default {
         Loading.hide()
 
         this.$router.push('/signup/steem/connect')
-
-        // if (typeof window !== 'undefined') window.location = this.$route.query.redirectUrl || process.env.UTOPIAN_DOMAIN
       } catch (err) {
         Loading.hide()
         Notify.create({
