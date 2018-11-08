@@ -23,6 +23,7 @@ export default {
         getUtopianUsername: 'username'
       }),
       currentStep: 'utopian',
+      creationFailed: false,
       // user internal data.
       user: {
         username: '',
@@ -110,6 +111,12 @@ export default {
 
       return ''
     },
+    skip () {
+      this.$router.push('/signup/finish')
+    },
+    tryAgain () {
+      this.$router.go()
+    },
     async submit () {
       this.$v.user.$touch()
 
@@ -132,6 +139,7 @@ export default {
 
         this.$router.push('/signup/finish')
       } catch (err) {
+        this.creationFailed = true
         Loading.hide()
         Notify.create({
           type: 'negative',
@@ -188,7 +196,7 @@ div.create-user-form
         .row.full-width.justify-end
           q-btn(color="primary", icon-right="mdi-arrow-down", label="Next", @click="currentStep = 'password'", :disabled="user.usernameAvailable !== true")
 
-    q-step(name="password" title="Password" icon="mdi-key")
+    q-step(name="password", title="Password", icon="mdi-key", :error="creationFailed")
       q-stepper-navigation
         p.q-subtitle We have generated a secure password for you. Make sure to save it at a safe and secure location as
           b  IT CANNOT BE RESTORED OR RECOVERED.
@@ -203,10 +211,26 @@ div.create-user-form
             @input="$v.user.$touch()",
           )
         q-btn.full-width(
+          v-if="!creationFailed"
           color="primary",
           label="Create",
           @click="submit"
         )
+        div(v-if="creationFailed").full-width
+          p.q-subtitle.text-negative We couldn't create a Steem account for you :(
+          .row.justify-between
+            q-btn(
+              color="primary",
+              label="Try again",
+              @click="tryAgain"
+            )
+            q-btn(
+              outline
+              color="negative",
+              label="Skip",
+              icon-right="mdi-arrow-right"
+              @click="skip"
+            )
 </template>
 
 <style lang="stylus">
