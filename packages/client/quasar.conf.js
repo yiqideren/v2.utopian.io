@@ -1,5 +1,12 @@
 // environment config.
 require('dotenv').config()
+const path = require('path')
+
+// i18n webpack cruft
+const I18N = require('@utopian/i18n/lib')
+const ExtraWatchWebpackPlugin = require('extra-watch-webpack-plugin')
+// todo: https://webpack.js.org/plugins/context-replacement-plugin/ for i18n files in all libs
+// const webpack = require('webpack')
 
 // quasar / app config.
 module.exports = function (ctx) {
@@ -8,18 +15,17 @@ module.exports = function (ctx) {
     preFetch: true,
     supportIE: false,
     // list of animations to load.
+    // todo: thin this out because it bloats the final package size
     animations: 'all', // animations: []
     // list of css files to load (including pre-processors).
     css: ['app.styl'],
-
     // quasar extras.
-    extras: ['roboto-font', 'mdi'],
+    extras: ['roboto-font', 'mdi', 'material-icons', 'fontawesome'],
     // quasar plugins.
     plugins: [
       'vuelidate',
       'i18n',
-      'axios',
-      'google-analytics'
+      'axios'
     ],
     // build configuration.
     build: {
@@ -28,25 +34,47 @@ module.exports = function (ctx) {
         AUTH_DOMAIN: process.env.AUTH_DOMAIN,
         GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
         STEEMCONNECT_CLIENT_ID: (process.env.STEEMCONNECT_CLIENT_ID || '"utopian.signin"'),
-        GA_ID: process.env.GA_ID
+        STEEM_API: (process.env.STEEM_API_DEV || '"https://api.steemit.com"')
       },
       scopeHoisting: true,
       vueRouterMode: 'history',
       useNotifier: false,
-
-      // webpack configuration.
-      extendWebpack: function (cfg) {
-        // main loader / js config.
-        cfg.module.rules.push({
-          enforce: 'pre',
-          test: /\.(js|vue)$/,
-          loader: 'eslint-loader',
-          exclude: /(node_modules|quasar)/
-        })
-        cfg.module.rules.push({
-          test: /\.pug$/,
-          loader: 'pug-plain-loader'
-        })
+      // vueCompiler: true,
+      chainWebpack(chain) {
+        chain.plugin('extraWatcher')
+          .use(ExtraWatchWebpackPlugin, [
+            {
+              dirs: [ 'src/i18n/overrides', '../i18n/locales_master' ]
+            }
+          ])
+        chain.plugin('i18n')
+          .use(I18N, [
+            [{
+              debug: false
+            }]
+          ])
+        chain.module.rule('lint')
+          .test(/\.(js|vue)$/)
+          .pre()
+          .use('eslint')
+            .loader('eslint-loader')
+            .options({
+              rules: {
+                semi: 'off'
+              }
+            })
+        chain.module.rule('template-engine')
+          .test(/\.pug$/)
+          .include
+            .add(path.resolve(__dirname, 'src'))
+            .end()
+          .use('pug')
+            .loader('pug-plain-loader')
+        chain.resolve.alias
+          .set('~', __dirname)
+          .set('@', path.resolve(__dirname, 'src'))
+        // normalize the global => good for some non-isomorphic modules
+        chain.output.set('globalObject', 'this')
       }
     },
     // dev server configuration.
@@ -56,7 +84,8 @@ module.exports = function (ctx) {
     },
     // framework configuration.
     framework: {
-      iconSet: 'mdi',
+      i18n: 'en-uk',
+      iconSet: 'material-icons',
       components: [
         'QAjaxBar',
         'QAutocomplete',
@@ -122,7 +151,12 @@ module.exports = function (ctx) {
         'QToolbarTitle',
         'QTooltip',
         'QUploader',
-        'QVideo'
+        'QVideo',
+        'QTable',
+        'QTh',
+        'QTr',
+        'QTd',
+        'QTableColumns'
       ],
       directives: [
         'Ripple',
@@ -143,6 +177,7 @@ module.exports = function (ctx) {
     // quasar modes.
     pwa: {
       manifest: {
+        htmlLang: 'de',
         name: 'Utopian.io',
         short_name: 'Utopian.io',
         description: 'Earn rewards by contributing to your favorite Open Source projects!',

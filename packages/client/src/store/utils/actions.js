@@ -4,3 +4,6 @@ export const transferToLocalStorage = ({ state, commit }) => {
   })
   commit('clearLocalStorageValues')
 }
+
+export const clearAppError = ({ commit }) => commit('setAppError', null)
+export const setAppError = ({ commit }, value) => commit('setAppError', value)
