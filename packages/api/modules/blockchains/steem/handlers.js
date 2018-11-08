@@ -46,10 +46,26 @@ const isSteemUsernameAvailable = async (req, h) => {
 
 const createSteemAccount = async (req, h) => {
   const user = await User.findOne({ username: req.auth.credentials.username })
+  const steemAccount = req.payload.username
+
   if (user) {
     if (user.hasCreatedSteemAccount) throw Boom.badData('user-already-created-steem-account')
     try {
       const steemResult = await createSteemAccountOperation(req.payload)
+
+      // Link steem account to user in database
+      user.blockchainAccounts.push({
+        blockchain: 'steem',
+        address: steemAccount,
+        active: (user.blockchainAccounts || []).length === 0
+      })
+
+      User.updateOne({
+        username: req.auth.credentials.username
+      }, {
+        blockchainAccounts: user.blockchainAccounts,
+        hasCreatedSteemAccount: true
+      })
 
       return h.response({
         data: steemResult
