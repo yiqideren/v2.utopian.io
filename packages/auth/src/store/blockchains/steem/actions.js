@@ -6,7 +6,7 @@ export const isSteemUsernameAvailable = async (context, username) => {
   const payload = await API.call({
     context,
     method: 'get',
-    url: `/v1/blockchains/steem/account/${username}/available`
+    url: `/v1/blockchains/steem/${username}/available`
   })
 
   return payload.available

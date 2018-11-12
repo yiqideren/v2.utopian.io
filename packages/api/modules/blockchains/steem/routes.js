@@ -14,7 +14,7 @@ routes.push([
   },
   {
     method: 'GET',
-    path: '/v1/blockchains/steem/account/{username}/available',
+    path: '/v1/blockchains/steem/{username}/available',
     handler: (req, h, next) => Handlers.isSteemUsernameAvailable(req, h, next),
     options: {
       auth: false,
