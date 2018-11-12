@@ -41,7 +41,7 @@ const users = new Schema({
     },
     data: { type: Object }
   }],
-  hasCreatedSteemAccout: {
+  hasCreatedSteemAccount: {
     type: Boolean,
     default: false
   },
