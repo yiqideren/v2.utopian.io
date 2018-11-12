@@ -14,7 +14,6 @@ export default {
     }
   },
 
-  // component methods.
   methods: {
     goToCreate () {
       this.$router.push('/signup/steem/create')
