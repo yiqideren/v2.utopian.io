@@ -37,7 +37,7 @@ const createSteemAccountOperation = ({ username, ownerAuth, activeAuth, postingA
 
     creator = process.env.ACCOUNT_CREATOR_TESTNET
     creatorPassword = process.env.ACCOUNT_CREATOR_PASSWORD_TESTNET
-    creatorKey = dsteem.PrivateKey.fromLogin(String(creator), String(creatorPassword), 'active')
+    creatorKey = dsteem.PrivateKey.fromLogin(String(creator), String(creatorPassword))
   } else {
     creator = process.env.ACCOUNT_CREATOR
     creatorPassword = process.env.ACCOUNT_CREATOR_ACTIVE_KEY
