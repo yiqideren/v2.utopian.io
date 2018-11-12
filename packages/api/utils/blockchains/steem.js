@@ -44,7 +44,6 @@ const createSteemAccountOperation = ({ username, ownerAuth, activeAuth, postingA
     creatorKey = dsteem.PrivateKey.from(String(creatorPassword))
   }
 
-  // the create discounted account operation
   const createOp = [
     'create_claimed_account',
     {
