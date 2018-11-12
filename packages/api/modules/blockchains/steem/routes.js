@@ -18,7 +18,7 @@ routes.push([
     handler: (req, h, next) => Handlers.isSteemUsernameAvailable(req, h, next),
     options: {
       auth: false,
-      tags: ['api', 'blockchains', 'steem'],
+      tags: ['blockchains', 'steem'],
       validate: Validate.isSteemUsernameAvailable
     }
   },
@@ -28,7 +28,7 @@ routes.push([
     handler: (req, h, next) => Handlers.createSteemAccount(req, h, next),
     options: {
       auth: { access: { scope: ['user'] } },
-      tags: ['api', 'blockchains', 'steem'],
+      tags: ['blockchains', 'steem'],
       validate: Validate.createSteemAccount
     }
   }
