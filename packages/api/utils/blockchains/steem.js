@@ -1,7 +1,7 @@
 const Axios = require('axios')
 const dsteem = require('dsteem')
 
-const steemClient = new dsteem.Client(process.env.STEEM_API)
+const steemClient = new dsteem.Client(process.env.STEEM_API || 'https://api.steemit.com')
 
 const getSteemConnectTokens = async (code) => {
   const response = await Axios({
