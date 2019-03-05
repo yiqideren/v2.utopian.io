@@ -264,7 +264,7 @@ div
       q-field.q-field-no-input(
         :label="`${$t('articles.createEdit.body.label')}*`"
         orientation="vertical"
-        :helper="$t('articles.createEdit.body.help')"
+        :helper="$t('articles.createEdit.body.helper')"
         :error="$v.article.body.$error"
       )
         form-wysiwyg(

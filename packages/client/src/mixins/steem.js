@@ -1,5 +1,8 @@
 import aesjs from 'aes-js'
 import { mapActions, mapGetters } from 'vuex'
+import { date } from 'quasar'
+
+const { addToDate } = date
 
 /**
  * Add this mixin to your page if it requires an active steem account
@@ -167,6 +170,7 @@ export const SteemTransfer = {
     ...mapGetters('auth', ['steemEnabled'])
   },
   methods: {
+    ...mapActions('utils', ['setAppError']),
     async loadAccountFunds () {
       const accounts = JSON.parse(localStorage.blockchainAccounts)
       const account = (await this.$steem.Client.database.getAccounts([accounts[0].address])).find(u => u.name === accounts[0].address)
@@ -212,6 +216,64 @@ export const SteemTransfer = {
       try {
         const privateKey = this.$steem.PrivateKey.fromString(key)
         return await this.$steem.Client.broadcast.sendOperations(operations, privateKey)
+      } catch (e) {
+        // TODO display a more precise message for other cases, blockchain related
+        console.log(e)
+        this.setAppError(this.$t('mixins.steem.errors.unexpected'))
+      }
+    }
+  }
+}
+
+export const SteemEscrow = {
+  methods: {
+    ...mapActions('utils', ['setAppError']),
+    async isActiveKeyValid (key) {
+      const accounts = JSON.parse(localStorage.blockchainAccounts)
+      const account = (await this.$steem.Client.database.getAccounts([accounts[0].address])).find(u => u.name === accounts[0].address)
+      try {
+        const privateKey = this.$steem.PrivateKey.fromString(key)
+        return privateKey.createPublic().toString() === account.active.key_auths[0][0]
+      } catch {
+
+      }
+      return false
+    },
+    async escrowTransfer ({ key, sender, receiver, bounty }) {
+      try {
+        const ratificationDeadline = addToDate(new Date(), { days: 2 })
+        const escrowExpiration = new Date(bounty.deadline)
+        // TODO date control
+        const operations = []
+        const escrowId = parseInt(Math.random() * (99999999 - 10000000) + 10000000)
+        operations.push([
+          'escrow_transfer',
+          {
+            from: sender,
+            to: receiver,
+            agent: process.env.ESCROW_ACCOUNT,
+            escrow_id: escrowId,
+            sbd_amount: `${parseFloat(bounty.amount[0].amount).toFixed(3)} SBD`,
+            steem_amount: '0.000 STEEM',
+            fee: `${(parseFloat(bounty.amount[0].amount) * 5 / 100).toFixed(3)} SBD`,
+            ratification_deadline: ratificationDeadline.toISOString().slice(0, -5),
+            escrow_expiration: escrowExpiration.toISOString().slice(0, -5),
+            json_meta: JSON.stringify({
+              bounty: window.location.href
+            })
+          }
+        ])
+        const transaction = await this.$steemjs.broadcast.sendAsync({
+          extensions: [],
+          operations
+        }, [key])
+        return {
+          escrowId,
+          transaction: {
+            id: transaction.id,
+            block: transaction.block_num
+          }
+        }
       } catch (e) {
         // TODO display a more precise message for other cases, blockchain related
         console.log(e)

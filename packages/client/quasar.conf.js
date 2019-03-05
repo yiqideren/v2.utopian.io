@@ -38,7 +38,8 @@ module.exports = function (ctx) {
         SENTRY_DSN: process.env.SENTRY_DSN,
         SEO_FB_ID: process.env.SEO_FB_ID,
         STEEM_API: process.env.STEEM_API || '"https://api.steemit.com"',
-        STEEM_ADDRESS_PREFIX: process.env.STEEM_ADDRESS_PREFIX || '"STM"'
+        STEEM_ADDRESS_PREFIX: process.env.STEEM_ADDRESS_PREFIX || '"STM"',
+        ESCROW_ACCOUNT: process.env.ESCROW_ACCOUNT
       },
       scopeHoisting: true,
       vueRouterMode: 'history',

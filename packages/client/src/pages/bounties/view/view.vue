@@ -60,7 +60,7 @@ export default {
 <template lang="pug">
 .bounty-view
   .row.gutter-md.bounty-header
-    .col-md-9.flex.justify-between.items-center
+    .col-md-9.col-sm-12.col-xs-12.flex.justify-between.items-center
       router-link.author-info.flex.items-center(:to="`/${$route.params.locale}/@${bounty.author.username}`")
         img(:src="bounty.author.avatarUrl")
         div
@@ -68,9 +68,10 @@ export default {
             strong {{bounty.author.username}}
             .reputation {{bounty.author.reputation.toFixed(0)}}
           .job {{bounty.author.job}}
-
+    .col-md-3.col-sm-12.col-xs-12.flex.justify-end
+      .bounty-status(:class="bounty.status") {{ $t(`search.searchForm.bountyStatus.status.${bounty.status}`) }}
   .row.gutter-md.bounty-content
-    .col-md-9
+    .col-md-9.col-xs-12
       q-card
         q-card-title
           router-link.project.flex.items-center(v-if="bounty.project", :to="`/${$route.params.locale}/projects/${bounty.project.slug}`")
@@ -83,6 +84,11 @@ export default {
           .title {{bounty.title}}
           .date {{$d(bounty.createdAt, 'long')}}
           .post-view(v-html="bounty.body")
+          a.issue(
+            v-if="bounty.issue"
+            :href="bounty.issue"
+            target="_blank"
+          ) {{ bounty.issue }}
         q-card-actions.flex.justify-between.items-center
           ul.bounty-skills
             li(v-for="skill in bounty.skills")
@@ -94,6 +100,11 @@ export default {
           :initialVoteCount="bounty.upVotes"
           :initialUserVote="bounty.userVote"
         )
+    .col-md-3.col-xs-12
+      q-card
+        q-card-title
+          .amount-fiat ${{ (bounty.amount[0].amount * bounty.quotes['SBDUSD']).toFixed(0) }}
+          .amount-crypto {{ bounty.amount[0].amount }}&nbsp;{{ bounty.amount[0].currency }}
   q-tabs.q-mt-md(color="white", text-color="black", underline-color="primary")
     q-tab(
       default
@@ -113,11 +124,7 @@ export default {
     )
     q-tab-pane(name="discussion")
       comments(obj="bounty", :id="bounty._id")
-    proposals-tab(
-      :id="bounty._id"
-      :status="bounty.status"
-      :userProposal="bounty.userProposal"
-    )
+    proposals-tab
     activity-tab(:activity="bounty.activity")
 </template>
 
@@ -171,6 +178,14 @@ export default {
         font-size 15px
         color $grey-6
         padding 10px 0
+      .issue
+        text-decoration none
+        color $primary
+        margin-top 5px
+        display block
+        font-size 14px
+        font-style italic
+        text-align right
       .q-card-actions
         border-top 1px solid $grey-4
       ul.bounty-skills
@@ -192,4 +207,32 @@ export default {
         font-size 15px
         strong, i
           margin-right 5px
+    .amount-fiat
+      text-align center
+      color $primary
+      font-size 48px
+      margin-top 10px
+      font-weight 600
+    .amount-crypto
+      text-align center
+      color $grey-6
+      font-size 14px
+      text-transform uppercase
+    .bounty-status
+      padding 4px 8px
+      color #FFF
+      font-weight bold
+      font-size 22px
+      text-transform uppercase
+      height 40px
+      &.open
+        background-color $light-green-14
+      &.inProgress
+        background-color $primary
+      &.solved
+        background-color $green-10
+      &.cancelled
+        background-color $deep-orange
+      &.dispute
+        background-color $red
 </style>

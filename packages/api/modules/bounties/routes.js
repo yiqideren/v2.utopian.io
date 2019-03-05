@@ -95,6 +95,24 @@ routes.push([
       tags: ['bounties'],
       validate: Validate.searchSkills
     }
+  },
+  {
+    method: 'POST',
+    path: '/v1/bounty/escrowaccounts',
+    handler: (req, h) => Handlers.escrowAccounts(req, h),
+    options: {
+      tags: ['bounties'],
+      validate: Validate.escrowAccounts
+    }
+  },
+  {
+    method: 'POST',
+    path: '/v1/bounty/assignuser',
+    handler: (req, h) => Handlers.assignUser(req, h),
+    options: {
+      tags: ['bounties'],
+      validate: Validate.assignUser
+    }
   }
 ])
 
