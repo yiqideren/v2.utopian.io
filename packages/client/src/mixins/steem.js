@@ -171,9 +171,17 @@ export const SteemTransfer = {
   },
   methods: {
     ...mapActions('utils', ['setAppError']),
+    async isActiveKeyValid (key) {
+      const accounts = JSON.parse(localStorage.blockchainAccounts)
+      if (!this.$steemjs.auth.isWif(key)) {
+        return false
+      }
+      const account = (await this.$steemjs.api.getAccountsAsync([accounts[0].address])).find(u => u.name === accounts[0].address)
+      return this.$steemjs.auth.wifIsValid(key, account['active']['key_auths'][0][0])
+    },
     async loadAccountFunds () {
       const accounts = JSON.parse(localStorage.blockchainAccounts)
-      const account = (await this.$steem.Client.database.getAccounts([accounts[0].address])).find(u => u.name === accounts[0].address)
+      const account = (await this.$steemjs.api.getAccountsAsync([accounts[0].address])).find(u => u.name === accounts[0].address)
       if (account) {
         return {
           address: account.name,
@@ -214,8 +222,15 @@ export const SteemTransfer = {
         ])
       }
       try {
-        const privateKey = this.$steem.PrivateKey.fromString(key)
-        return await this.$steem.Client.broadcast.sendOperations(operations, privateKey)
+        const transaction = await this.$steemjs.broadcast.sendAsync({
+          extensions: [],
+          operations
+        }, [key])
+        return {
+          blockchain: 'steem',
+          id: transaction.id,
+          block: transaction.block_num
+        }
       } catch (e) {
         // TODO display a more precise message for other cases, blockchain related
         console.log(e)
@@ -230,14 +245,11 @@ export const SteemEscrow = {
     ...mapActions('utils', ['setAppError']),
     async isActiveKeyValid (key) {
       const accounts = JSON.parse(localStorage.blockchainAccounts)
-      const account = (await this.$steem.Client.database.getAccounts([accounts[0].address])).find(u => u.name === accounts[0].address)
-      try {
-        const privateKey = this.$steem.PrivateKey.fromString(key)
-        return privateKey.createPublic().toString() === account.active.key_auths[0][0]
-      } catch {
-
+      if (!this.$steemjs.auth.isWif(key)) {
+        return false
       }
-      return false
+      const account = (await this.$steemjs.api.getAccountsAsync([accounts[0].address])).find(u => u.name === accounts[0].address)
+      return this.$steemjs.auth.wifIsValid(key, account['active']['key_auths'][0][0])
     },
     async escrowTransfer ({ key, sender, receiver, bounty }) {
       try {

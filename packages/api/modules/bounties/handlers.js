@@ -462,6 +462,10 @@ const assignUser = async (req, h) => {
   }
 
   const block = await req.steem.api.getBlockAsync(transaction.block)
+  if (!block) {
+    throw Boom.badData('general.documentDoesNotExist')
+  }
+
   const blockchainTransaction = block.transactions.find((t) => t.transaction_id === transaction.id)
   if (!blockchainTransaction) {
     throw Boom.badData('general.documentDoesNotExist')

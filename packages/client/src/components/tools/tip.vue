@@ -99,6 +99,10 @@ export default {
         if (this.$v.steemForm.$invalid) {
           return
         }
+        if (!await this.isActiveKeyValid(this.steemForm.activeKey)) {
+          this.setAppError('bounties.view.assignModal.errors.invalidActiveKey')
+          return
+        }
         this.steemSenderUser = this.getSteemSenderUser()
       } else if (this.step === 'confirmation') {
         this.submitting = true
