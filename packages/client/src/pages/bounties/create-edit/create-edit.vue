@@ -4,11 +4,11 @@ import { maxLength, maxValue, minValue, required, url } from 'vuelidate/lib/vali
 import FormWysiwyg from 'src/components/form/wysiwyg'
 import FormCategories from 'src/components/form/categories'
 import FormProject from 'src/components/form/project'
-import { SteemAccountRequired, SteemPost, SteemTransfer } from 'src/mixins/steem'
+import { Steem } from 'src/mixins/steem'
 
 export default {
   name: 'page-bounties-create-edit',
-  mixins: [SteemAccountRequired, SteemPost, SteemTransfer],
+  mixins: [Steem],
   components: {
     FormWysiwyg,
     FormCategories,
@@ -97,7 +97,7 @@ export default {
         this.blockchains = result.blockchains
       }
     }
-    this.steemAccountFunds = await this.loadAccountFunds()
+    this.steemAccountFunds = await this.getSteemAccountFunds()
   },
   methods: {
     ...mapActions('utils', ['setAppSuccess', 'setAppError']),
@@ -110,7 +110,7 @@ export default {
       'updateBlockchainData'
     ]),
     async submit () {
-      if (status !== 'open') return
+      if (this.status !== 'open') return
       this.submitting = true
       this.$v.bounty.$touch()
       if (this.$v.bounty.$invalid) {
@@ -132,7 +132,7 @@ export default {
       if (result) {
         const tags = ['utopian-io', result.category].concat(result.skills)
         const permlink = `${result.slug.split('/')[1]}-${Date.now()}`
-        const blockchainData = await this.post({
+        const blockchainData = await this.steemPost({
           url: `/${this.$route.params.locale}/bounties/${result.slug}`,
           body: result.body,
           permlink,

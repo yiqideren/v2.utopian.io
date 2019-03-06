@@ -7,39 +7,16 @@ const { addToDate } = date
 /**
  * Add this mixin to your page if it requires an active steem account
  */
-export const SteemAccountRequired = {
+export const Steem = {
   computed: {
     ...mapGetters('auth', ['steemEnabled'])
   },
-  watch: {
-    steemEnabled: function (value) {
-      if (value === false) {
-        this.$router.push({ path: `/${this.$route.params.locale}/profile/steem` })
-      }
-    }
-  }
-}
-
-/**
- * Add this mixin to your page if you need to broadcast content
- */
-export const SteemPost = {
   methods: {
     ...mapActions('users', ['getEncryptionKey']),
     ...mapActions('utils', ['setAppError']),
-    /**
-     * Parse html to MD
-     * Append a footer link to redirect users back to utopian
-     *
-     * @param body {string} - post content
-     * @param url {string} - return url to utopian
-     *
-     * @returns {string} - parsed body and appended url
-     *
-     * @author Grégory LATINIER
-     */
-    parsePostBody ({ body, url }) {
-      return `${this.$turndown.turndown(body)}\n\n[${this.$t('mixins.steem.postFooter')}](${window.location.protocol}//${window.location.host}${url})`
+    getSteemitUrl () {
+      const { data } = this.blockchains.find(b => b.name === 'steem')
+      return `https://steemit.com/${data.parentPermlink}/@${data.author}/${data.permlink}`
     },
     /**
      * Publish content to the Steem blockchain
@@ -57,7 +34,7 @@ export const SteemPost = {
      *
      * @author Grégory LATINIER
      */
-    async post ({ body, permlink, tags, title, url, blockchain, context, category }) {
+    async steemPost ({ body, permlink, tags, title, url, blockchain, context, category }) {
       try {
         const accounts = JSON.parse(localStorage.blockchainAccounts)
         const encryptionKey = await this.getEncryptionKey()
@@ -68,23 +45,27 @@ export const SteemPost = {
         const encryptedBytes = aesjs.utils.hex.toBytes(accounts[0].encryptedKey)
         const decryptedBytes = aesCbc.decrypt(encryptedBytes)
         const postingKey = aesjs.utils.utf8.fromBytes(decryptedBytes).substr(3).trim()
-        const privateKey = this.$steem.PrivateKey.fromString(postingKey)
         const author = accounts[0].address
         const jsonMetadata = JSON.stringify({ app: 'utopian.io', format: 'markdown', tags })
         const parentPermlink = 'utopian-io'
-        let transaction
+        const operations = []
         if (!blockchain) {
-          const beneficiaries = await getBeneficiairies({ context })
-          transaction = await this.$steem.Client.broadcast.commentWithOptions(
+          const beneficiaries = await getBeneficiaries({ context })
+          operations.push([
+            'comment',
             {
               author,
-              body: this.parsePostBody({ body, url }),
+              body: this._parsePostBody({ body, url }),
               json_metadata: jsonMetadata,
               parent_author: '',
               parent_permlink: parentPermlink,
               permlink,
               title
-            }, {
+            }
+          ])
+          operations.push([
+            'comment_options',
+            {
               author,
               permlink,
               max_accepted_payout: '1000000.000 SBD',
@@ -94,35 +75,36 @@ export const SteemPost = {
               extensions: [
                 [0, { beneficiaries }]
               ]
-            },
-            privateKey)
-          return {
-            author,
-            parentPermlink,
-            permlink,
-            transaction
-          }
+            }
+          ])
+        // Article is updated
         } else {
           // TODO diff patch?
-          transaction = await this.$steem.Client.broadcast.comment(
+          operations.push([
+            'comment',
             {
               author,
-              body: this.parsePostBody({ body, url }),
+              body: this._parsePostBody({ body, url }),
               json_metadata: jsonMetadata,
               parent_author: '',
               parent_permlink: blockchain.data.parentPermlink,
               permlink: blockchain.data.permlink,
               title
-            },
-            privateKey)
-          return {
-            author,
-            parentPermlink: blockchain.data.parentPermlink,
-            permlink: blockchain.data.permlink,
-            transaction
-          }
+            }
+          ])
+        }
+        const transaction = await this.$steemjs.broadcast.sendAsync({
+          extensions: [],
+          operations
+        }, [postingKey])
+        return {
+          author,
+          parentPermlink: blockchain ? blockchain.data.parentPermlink : parentPermlink,
+          permlink: blockchain ? blockchain.data.permlink : permlink,
+          transaction
         }
       } catch (e) {
+        console.log(e)
         // TODO display a more precise message for other cases, blockchain related
         if (e.toString().includes('Non-base58 character')) {
           this.setAppError(this.$t('mixins.steem.errors.keys'))
@@ -135,51 +117,18 @@ export const SteemPost = {
         return null
       }
     },
-    getSteemitUrl () {
-      const { data } = this.blockchains.find(b => b.name === 'steem')
-      return `https://steemit.com/${data.parentPermlink}/@${data.author}/${data.permlink}`
-    }
-  }
-}
-
-// FULL STEEM POWER scale value from 10000 to 0 (10000 == 100%)
-const getPercentSteemDollars = (context) => {
-  switch (context) {
-    case 'article':
-      return 5000
-    case 'bounty':
-      return 10000
-    default:
-      return 5000
-  }
-}
-
-// TODO dynamic beneficiaries depending on the category
-const getBeneficiairies = async ({ context }) => {
-  if (context === 'article') {
-    return [{ account: 'utopian.pay', weight: 500 }]
-  } else if (context === 'bounty') {
-    return [{ account: 'utopian.pay', weight: 10000 }]
-  } else if (context === 'bounty-solution') {
-    return [{ account: 'utopian.pay', weight: 1500 }]
-  }
-}
-
-export const SteemTransfer = {
-  computed: {
-    ...mapGetters('auth', ['steemEnabled'])
-  },
-  methods: {
-    ...mapActions('utils', ['setAppError']),
-    async isActiveKeyValid (key) {
-      const accounts = JSON.parse(localStorage.blockchainAccounts)
+    async isSteemKeyValid (key, type, address) {
+      const name = address || JSON.parse(localStorage.blockchainAccounts)[0].address
       if (!this.$steemjs.auth.isWif(key)) {
         return false
       }
-      const account = (await this.$steemjs.api.getAccountsAsync([accounts[0].address])).find(u => u.name === accounts[0].address)
-      return this.$steemjs.auth.wifIsValid(key, account['active']['key_auths'][0][0])
+      const account = (await this.$steemjs.api.getAccountsAsync([name])).find(u => u.name === name)
+      return this.$steemjs.auth.wifIsValid(key, account[type]['key_auths'][0][0])
     },
-    async loadAccountFunds () {
+    async isSteemAccountValid (address) {
+      return (await this.$steemjs.api.getAccountsAsync([address])).some(u => u.name === address)
+    },
+    async getSteemAccountFunds () {
       const accounts = JSON.parse(localStorage.blockchainAccounts)
       const account = (await this.$steemjs.api.getAccountsAsync([accounts[0].address])).find(u => u.name === accounts[0].address)
       if (account) {
@@ -192,11 +141,11 @@ export const SteemTransfer = {
       }
       return null
     },
-    getSteemSenderUser () {
+    getUserSteemAccount () {
       const accounts = JSON.parse(localStorage.blockchainAccounts)
       return accounts[0].address
     },
-    async transfer ({ steem, sbd, key, from, to, url }) {
+    async transferSteems ({ steem, sbd, key, from, to, url }) {
       const memo = `${this.$t('mixins.steem.memoTip')} ${window.location.protocol}//${window.location.host}${url}`
       const operations = []
       if (steem) {
@@ -236,22 +185,8 @@ export const SteemTransfer = {
         console.log(e)
         this.setAppError(this.$t('mixins.steem.errors.unexpected'))
       }
-    }
-  }
-}
-
-export const SteemEscrow = {
-  methods: {
-    ...mapActions('utils', ['setAppError']),
-    async isActiveKeyValid (key) {
-      const accounts = JSON.parse(localStorage.blockchainAccounts)
-      if (!this.$steemjs.auth.isWif(key)) {
-        return false
-      }
-      const account = (await this.$steemjs.api.getAccountsAsync([accounts[0].address])).find(u => u.name === accounts[0].address)
-      return this.$steemjs.auth.wifIsValid(key, account['active']['key_auths'][0][0])
     },
-    async escrowTransfer ({ key, sender, receiver, bounty }) {
+    async steemEscrowTransfer ({ key, sender, receiver, bounty }) {
       try {
         const ratificationDeadline = addToDate(new Date(), { days: 2 })
         const escrowExpiration = new Date(bounty.deadline)
@@ -291,6 +226,50 @@ export const SteemEscrow = {
         console.log(e)
         this.setAppError(this.$t('mixins.steem.errors.unexpected'))
       }
+    },
+    /**
+     * Parse html to MD
+     * Append a footer link to redirect users back to utopian
+     *
+     * @param body {string} - post content
+     * @param url {string} - return url to utopian
+     *
+     * @returns {string} - parsed body and appended url
+     *
+     * @author Grégory LATINIER
+     */
+    _parsePostBody ({ body, url }) {
+      return `${this.$turndown.turndown(body)}\n\n[${this.$t('mixins.steem.postFooter')}](${window.location.protocol}//${window.location.host}${url})`
     }
+  },
+  watch: {
+    steemEnabled: function (value) {
+      if (value === false) {
+        this.$router.push({ path: `/${this.$route.params.locale}/profile/steem` })
+      }
+    }
+  }
+}
+
+// FULL STEEM POWER scale value from 10000 to 0 (10000 == 100%)
+const getPercentSteemDollars = (context) => {
+  switch (context) {
+    case 'article':
+      return 5000
+    case 'bounty':
+      return 10000
+    default:
+      return 5000
+  }
+}
+
+// TODO dynamic beneficiaries depending on the category
+const getBeneficiaries = async ({ context }) => {
+  if (context === 'article') {
+    return [{ account: 'utopian.pay', weight: 500 }]
+  } else if (context === 'bounty') {
+    return [{ account: 'utopian.pay', weight: 10000 }]
+  } else if (context === 'bounty-solution') {
+    return [{ account: 'utopian.pay', weight: 1500 }]
   }
 }

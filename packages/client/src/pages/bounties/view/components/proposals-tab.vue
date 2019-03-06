@@ -1,12 +1,12 @@
 <script>
 import { mapGetters, mapActions, mapMutations } from 'vuex'
 import { required } from 'vuelidate/lib/validators'
-import { SteemEscrow, SteemTransfer } from 'src/mixins/steem'
+import { Steem } from 'src/mixins/steem'
 import Proposal from './proposal'
 
 export default {
   name: 'bounty-view-proposals-tab',
-  mixins: [SteemEscrow, SteemTransfer],
+  mixins: [Steem],
   components: {
     Proposal
   },
@@ -63,19 +63,19 @@ export default {
         this.submitting = false
         return
       }
-      if (!await this.isActiveKeyValid(this.activeKey)) {
+      if (!await this.isSteemKeyValid(this.activeKey, 'active')) {
         this.setAppError('bounties.view.assignModal.errors.invalidActiveKey')
         this.submitting = false
         return
       }
-      const funds = await this.loadAccountFunds()
+      const funds = await this.getSteemAccountFunds()
       if (this.bounty.amount[0].amount > parseFloat(funds.sbd)) {
         this.setAppError('bounties.view.assignModal.errors.notEnoughMoney')
         this.submitting = false
         return
       }
       const steemAccounts = await this.getEscrowAccounts({ id: this.selectedProposal.author._id })
-      const { escrowId, transaction } = await this.escrowTransfer({
+      const { escrowId, transaction } = await this.steemEscrowTransfer({
         ...steemAccounts,
         bounty: this.bounty,
         key: this.activeKey

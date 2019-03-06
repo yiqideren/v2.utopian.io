@@ -1,15 +1,7 @@
-import { Client, PrivateKey, PublicKey } from 'dsteem'
 import steemjs from '@steemit/steem-js'
 
 export default ({ Vue }) => {
-  console.log(process)
-  console.log('PID', process.pid)
-  Vue.prototype.$steem = {
-    Client: new Client(process.env.STEEM_API, {
-      addressPrefix: process.env.STEEM_ADDRESS_PREFIX
-    }),
-    PrivateKey,
-    PublicKey
-  }
+  steemjs.api.setOptions({ url: process.env.STEEM_API })
+  steemjs.config.set('address_prefix', process.env.STEEM_ADDRESS_PREFIX)
   Vue.prototype.$steemjs = steemjs
 }

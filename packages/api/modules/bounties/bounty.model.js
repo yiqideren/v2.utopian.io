@@ -30,10 +30,10 @@ const bounties = new Schema({
   category: { type: String, required: true },
   deadline: { type: Date, required: true },
   escrow: {
-    escrowId: { type: Number, required: true },
-    from: { type: String, required: true },
-    to: { type: String, required: true },
-    agent: { type: String, required: true }
+    escrowId: { type: Number },
+    from: { type: String },
+    to: { type: String },
+    agent: { type: String }
   },
   issue: { type: String },
   lang: { type: String, required: true },
